@@ -1,83 +1,71 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <title>Live Thermal Gradient</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #000;
-            margin: 0;
-            color: white;
-            font-family: sans-serif;
-            flex-direction: column;
-        }
-        canvas {
-            border: 2px solid white;
-        }
-        h1 {
-            margin-bottom: 20px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>موجه المكفوفين - أسهم الساعة</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 20px;
+        background-color: #f0f0f0;
+        direction: rtl;
+    }
+    h1 {
+        color: #2c3e50;
+    }
+    .clock-container {
+        position: relative;
+        width: 300px;
+        height: 300px;
+        margin: 30px auto;
+        border: 2px solid #3498db;
+        border-radius: 50%;
+        background-color: #ffffff;
+    }
+    .hour-btn {
+        position: absolute;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: none;
+        background-color: #3498db;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+    }
+</style>
 </head>
 <body>
-    <h1>🫣</h1>
-    <video id="camera" autoplay playsinline width="640" height="480" style="display:none;"></video>
-    <canvas id="output" width="640" height="480"></canvas>
+<h1>موجه المكفوفين - أسهم الساعة</h1>
+<div class="clock-container" id="clock"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix"></script>
+<script>
+const hours = [12,1,2,3,4,5,6,7,8,9,10,11];
+const radius = 120; // نصف قطر الدائرة
+const center = 150; // مركز الدائرة (عرض/ارتفاع = 300px)
 
-    <script>
-    const video = document.getElementById('camera');
-    const canvas = document.getElementById('output');
-    const ctx = canvas.getContext('2d');
+const clock = document.getElementById('clock');
 
-    navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => { video.srcObject = stream; })
-        .catch(err => console.error(err));
+hours.forEach((h, i) => {
+    const angle = (i / 12) * 2 * Math.PI - Math.PI/2; // تحويل إلى زاوية
+    const x = center + radius * Math.cos(angle) - 25; // 25 = نصف عرض الزر
+    const y = center + radius * Math.sin(angle) - 25; // 25 = نصف ارتفاع الزر
 
-    async function runThermalGradient() {
-        const net = await bodyPix.load();
+    const btn = document.createElement('button');
+    btn.innerText = h;
+    btn.className = 'hour-btn';
+    btn.style.left = `${x}px`;
+    btn.style.top = `${y}px`;
 
-        async function frameLoop() {
-            const segmentation = await net.segmentPerson(video, {
-                flipHorizontal: false,
-                internalResolution: 'medium',
-                segmentationThreshold: 0.7
-            });
+    btn.onclick = () => {
+        const msg = new SpeechSynthesisUtterance(`اتجه نحو الساعة ${h}`);
+        window.speechSynthesis.speak(msg);
+    };
 
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            let data = imageData.data;
-
-            for (let i = 0; i < data.length; i += 4) {
-                let pixelIndex = i / 4;
-                let maskVal = segmentation.data[pixelIndex];
-
-                if (maskVal === 1) {
-                    let heat = Math.floor(Math.random() * 55) + 200; // 200-255
-                    data[i] = heat;          // R
-                    data[i + 1] = Math.floor(heat * 0.4); // G أقل
-                    data[i + 2] = 0;         // B صفر
-                } else {
-                    data[i] = 0;
-                    data[i + 1] = 0;
-                    data[i + 2] = 100;
-                }
-            }
-
-            ctx.putImageData(imageData, 0, 0);
-            requestAnimationFrame(frameLoop);
-        }
-
-        frameLoop();
-    }
-
-    runThermalGradient();
-    </script>
+    clock.appendChild(btn);
+});
+</script>
 </body>
 </html>
