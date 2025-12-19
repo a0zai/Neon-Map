@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>موجه المكفوفين - أسهم الساعة</title>
+<title>موجه المكفوفين - GPS وصوت واهتزاز</title>
 <style>
     body {
         font-family: Arial, sans-serif;
@@ -12,60 +12,103 @@
         background-color: #f0f0f0;
         direction: rtl;
     }
-    h1 {
-        color: #2c3e50;
+    h1 { color: #2c3e50; }
+    input {
+        padding: 8px;
+        width: 120px;
+        margin: 5px;
+        font-size: 16px;
     }
-    .clock-container {
-        position: relative;
-        width: 300px;
-        height: 300px;
-        margin: 30px auto;
-        border: 2px solid #3498db;
-        border-radius: 50%;
-        background-color: #ffffff;
-    }
-    .hour-btn {
-        position: absolute;
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        border: none;
-        background-color: #3498db;
-        color: white;
-        font-weight: bold;
+    button {
+        padding: 10px 20px;
+        font-size: 16px;
+        margin-top: 10px;
         cursor: pointer;
+    }
+    #status {
+        margin: 15px 0;
+        font-size: 18px;
+        color: #34495e;
     }
 </style>
 </head>
 <body>
-<h1>موجه المكفوفين - أسهم الساعة</h1>
-<div class="clock-container" id="clock"></div>
+<h1>موجه المكفوفين - GPS وصوت واهتزاز</h1>
+
+<p>أدخل إحداثيات الوجهة:</p>
+<input type="number" id="latInput" placeholder="Latitude" step="any">
+<input type="number" id="lonInput" placeholder="Longitude" step="any">
+<br>
+<button id="setDestination">تعيين الوجهة</button>
+
+<p id="status">لم يتم تعيين وجهة بعد.</p>
 
 <script>
-const hours = [12,1,2,3,4,5,6,7,8,9,10,11];
-const radius = 120; // نصف قطر الدائرة
-const center = 150; // مركز الدائرة (عرض/ارتفاع = 300px)
+let destination = null;
+let lastHour = null;
 
-const clock = document.getElementById('clock');
+function getBearing(lat1, lon1, lat2, lon2) {
+    const toRad = Math.PI/180;
+    const toDeg = 180/Math.PI;
+    const y = Math.sin((lon2-lon1)*toRad) * Math.cos(lat2*toRad);
+    const x = Math.cos(lat1*toRad)*Math.sin(lat2*toRad) -
+              Math.sin(lat1*toRad)*Math.cos(lat2*toRad)*Math.cos((lon2-lon1)*toRad);
+    return (Math.atan2(y, x)*toDeg + 360) % 360;
+}
 
-hours.forEach((h, i) => {
-    const angle = (i / 12) * 2 * Math.PI - Math.PI/2; // تحويل إلى زاوية
-    const x = center + radius * Math.cos(angle) - 25; // 25 = نصف عرض الزر
-    const y = center + radius * Math.sin(angle) - 25; // 25 = نصف ارتفاع الزر
+function angleToHour(targetAngle) {
+    let diff = targetAngle;
+    let hour = Math.round(diff / 30);
+    return hour === 0 ? 12 : hour;
+}
 
-    const btn = document.createElement('button');
-    btn.innerText = h;
-    btn.className = 'hour-btn';
-    btn.style.left = `${x}px`;
-    btn.style.top = `${y}px`;
+function speakDirection(hour) {
+    if(hour === lastHour) return;
+    lastHour = hour;
+    const msg = new SpeechSynthesisUtterance(`اتجه نحو الساعة ${hour}`);
+    msg.lang = 'ar-SA';
+    msg.rate = 0.9;
+    window.speechSynthesis.speak(msg);
 
-    btn.onclick = () => {
-        const msg = new SpeechSynthesisUtterance(`اتجه نحو الساعة ${h}`);
-        window.speechSynthesis.speak(msg);
-    };
+    // اهتزاز الهاتف لفائدة المكفوف
+    if(navigator.vibrate) {
+        // نمط اهتزاز مختلف حسب الساعة
+        let pattern = [100]; // افتراضي
+        if(hour % 3 === 0) pattern = [200, 100, 200]; // مثال لنغمة خاصة للساعة 3،6,9,12
+        navigator.vibrate(pattern);
+    }
+}
 
-    clock.appendChild(btn);
+document.getElementById('setDestination').addEventListener('click', () => {
+    const lat = parseFloat(document.getElementById('latInput').value);
+    const lon = parseFloat(document.getElementById('lonInput').value);
+    if(isNaN(lat) || isNaN(lon)) {
+        alert("الرجاء إدخال إحداثيات صحيحة!");
+        return;
+    }
+    destination = {lat, lon};
+    document.getElementById('status').innerText = `وجهتك تم تعيينها: ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+    lastHour = null; // إعادة ضبط الساعة الأخيرة
 });
+
+if (navigator.geolocation) {
+    navigator.geolocation.watchPosition(position => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+
+        if(destination) {
+            const bearing = getBearing(lat, lon, destination.lat, destination.lon);
+            const hour = angleToHour(bearing);
+            speakDirection(hour);
+        }
+
+    }, error => {
+        document.getElementById('status').innerText = "خطأ في الحصول على الموقع.";
+        console.error(error);
+    }, {enableHighAccuracy: true, maximumAge: 0, timeout: 5000});
+} else {
+    document.getElementById('status').innerText = "جهازك لا يدعم GPS.";
+}
 </script>
 </body>
 </html>
