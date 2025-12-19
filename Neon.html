@@ -1,213 +1,83 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="application-name" content="A0Z">
-<meta name="author" content="system">
-<meta name="generator" content="custom-static">
-<meta name="classification" content="web-interface">
-<meta name="subject" content="real-time interaction">
-<title>A∞Z</title>
-<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-<style>
-html, body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    background: #000;
-    font-family: 'Courier New', monospace;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-}
-
-#particles-js {
-    position: fixed;
-    top:0; left:0;
-    width:100%; height:100%;
-    z-index:0;
-    pointer-events:none;
-}
-#output { 
-    opacity:1;
-    transform: translateY(0);
-    white-space: pre-wrap;
-    z-index:10;
-    color: #eaeaea;
-    text-shadow: 0 0 8px rgba(255,255,255,0.7);
-}
-.line {
-    margin-bottom:0.7em;
-    opacity:0;
-    transform: translateY(20px);
-    transition: opacity 2s ease, transform 2s ease;
-}
-.line.visible {
-    opacity:1;
-    transform: translateY(0);
-}
-
-.glitch {
-    font-weight:bold;
-    letter-spacing:1px;
-    color:#00ff00;
-    text-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00;
-    animation: glitchAnim 0.12s steps(2, jump-end) infinite;
-}
-@keyframes glitchAnim {
-    0% { transform:translate(1px,-1px); }
-    50% { transform:translate(-2px,2px); }
-    100% { transform:translate(1px,-1px); }
-}
-
-.shake {
-    animation: shakeAnim 0.35s ease-in-out;
-}
-@keyframes shakeAnim {
-    0% { transform:translateX(0); }
-    20% { transform:translateX(-4px); }
-    40% { transform:translateX(4px); }
-    60% { transform:translateX(-3px); }
-    80% { transform:translateX(3px); }
-    100% { transform:translateX(0); }
-}
-
-/* Fade black at the end */
-#fade-black {
-    position: fixed;
-    top:0; left:0;
-    width:100%; height:100%;
-    background:#000;
-    pointer-events:none;
-    opacity:0;
-    z-index:999;
-    transition: opacity 3s ease;
-}
-</style>
+    <meta charset="UTF-8">
+    <title>Live Thermal Gradient</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #000;
+            margin: 0;
+            color: white;
+            font-family: sans-serif;
+            flex-direction: column;
+        }
+        canvas {
+            border: 2px solid white;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 <body>
-<div id="particles-js"></div>
-<div id="output"></div>
-<div id="fade-black"></div>
+    <h1>🫣</h1>
+    <video id="camera" autoplay playsinline width="640" height="480" style="display:none;"></video>
+    <canvas id="output" width="640" height="480"></canvas>
 
-<script>
-/* ---- TYPEWRITER EFFECT ---- */
-function typeLine(text, callback) {
-    const container = document.getElementById("output");
-    const line = document.createElement("div");
-    line.className = "line";
-    container.appendChild(line);
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix"></script>
 
-    setTimeout(() => line.classList.add('visible'), 50);
+    <script>
+    const video = document.getElementById('camera');
+    const canvas = document.getElementById('output');
+    const ctx = canvas.getContext('2d');
 
-    let i = 0;
-    function type() {
-        if(i < text.length){
-            line.textContent += text[i];
-            i++;
-            const jitter = Math.random() * 80;
-            setTimeout(type, 100 + jitter);
-        } else {
-            if(callback) setTimeout(callback, 200);
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => { video.srcObject = stream; })
+        .catch(err => console.error(err));
+
+    async function runThermalGradient() {
+        const net = await bodyPix.load();
+
+        async function frameLoop() {
+            const segmentation = await net.segmentPerson(video, {
+                flipHorizontal: false,
+                internalResolution: 'medium',
+                segmentationThreshold: 0.7
+            });
+
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            let data = imageData.data;
+
+            for (let i = 0; i < data.length; i += 4) {
+                let pixelIndex = i / 4;
+                let maskVal = segmentation.data[pixelIndex];
+
+                if (maskVal === 1) {
+                    let heat = Math.floor(Math.random() * 55) + 200; // 200-255
+                    data[i] = heat;          // R
+                    data[i + 1] = Math.floor(heat * 0.4); // G أقل
+                    data[i + 2] = 0;         // B صفر
+                } else {
+                    data[i] = 0;
+                    data[i + 1] = 0;
+                    data[i + 2] = 100;
+                }
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+            requestAnimationFrame(frameLoop);
         }
-    }
-    type();
-}
 
-/* ---- RANDOM GLITCH ---- */
-function glitchFx() {
-    const out = document.getElementById("output");
-    const g = document.createElement("div");
-    g.className = "line glitch";
-    g.textContent = "!! SIGNAL DISTORTION DETECTED !!";
-    out.appendChild(g);
-    setTimeout(() => g.remove(), 500);
-}
-
-/* ---- MASTER SEQUENCE ---- */
-function runSequence(lines, index=0) {
-    if(index >= lines.length){
-        const fade = document.getElementById("fade-black");
-        fade.style.opacity = 1;
-
-        fade.addEventListener("transitionend", () => {
-            window.location.href = "index.html";
-        }, { once: true });
-
-        return;
+        frameLoop();
     }
 
-    typeLine(lines[index], () => {
-        if(Math.random() < 0.22) glitchFx();
-        if(lines[index].includes("FAILED") || lines[index].includes("Unknown")){
-            const last = document.querySelector(".line:last-child");
-            last.classList.add("shake");
-        }
-        runSequence(lines, index+1);
-    });
-}
-
-/* ---- START ---- */
-fetch("https://api.ipify.org?format=json")
-  .then(r => r.json())
-  .then(data => {
-      const lines = [
-        "It started on a night that shouldn’t have carried any echoes…",
-        "No timestamp. No origin. No sender signature.",
-        "A message that had been trying to arrive for 12 years,",
-        "",
-        "Tonight…",
-        "",
-        ">>> Decrypting frozen message...",
-        "Sender: Only Brother",
-        "To: Mamy",
-        "",
-        "“Mamy…",
-        "Why didn’t you answer my calls…?”",
-        "",
-        "Opa hasn’t woken up.",
-        "Before he slept he said:",
-        "   ‘Your Dady will be late.’",
-        "",
-        "Message Age: 12 years",
-        "Delivery Status: FAILED",
-        "Reason: No recipient detected.",
-        "-----",
-        "Connection unstable...",
-        "Why? Continue? Let's see~>N...."
-      ];
-      runSequence(lines);
-  })
-  .catch(() => {
-      runSequence([
-          "[ A∞Z / FAILURE ]",
-          "Metadata retrieval failed...",
-          "But something recognized you anyway.",
-          "",
-          "Closing connection..."
-      ]);
-  });
-
-/* ---- PARTICLES ---- */
-particlesJS("particles-js", {
-    particles: {
-        number: { value:200, density:{ enable:true, value_area:1800 } },
-        color: { value:"#ffffff" },
-        shape: { type:"circle" },
-        opacity: { value:0.7, random:true },
-        size: { value:1.5, random:true },
-        line_linked: { enable:false },
-        move: { enable:true, speed:0.5, random:true, straight:false, out_mode:"out" }
-    },
-    interactivity: {
-        detect_on:"canvas",
-        events:{ onhover:{ enable:false }, onclick:{ enable:false } }
-    },
-    retina_detect:true
-});
-</script>
+    runThermalGradient();
+    </script>
 </body>
 </html>
