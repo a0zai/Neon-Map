@@ -85,14 +85,16 @@ html, body {
   color:#ff3333;
 }
 
-/* CAMERA */
 #smallCamera {
-  position:fixed; top:20px; left:50%;
-  transform:translateX(-50%);
-  width:160px; height:120px;
-  border-radius:50%/60%;
-  object-fit:cover;
-  z-index:10000;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  pointer-events: none;
 }
 
 /* NAME INPUT */
@@ -215,7 +217,6 @@ html, body {
 }
 </style>
 </head>
-
 <body>
 <div id="particles-js"></div>
 <div id="viewersCount" class="fade-in-fog">👁️‍🗨️ 0</div>
@@ -231,20 +232,36 @@ html, body {
 <!-- CHAT -->
 <div id="chatWrapper" class="fade-in-fog">
   <div id="namePrompt">
-    <h2 style="color:#ff3333; text-shadow:0 0 8px red;">The channel opens…</h2>
+    <h2 style="color:#ff3333; text-shadow:0 0 8px red;">🕯️</h2>
     <video id="smallCamera" autoplay muted playsinline></video>
     <input id="nameInput" placeholder="Name?" autocomplete="off" />
     <button id="joinBtn">Enter 🪶</button>
-  </div>
-
+    </div>
+    <div id="pinnedMessage" style="
+    display: inline-block;
+    padding: 6px 12px;
+    margin-bottom: 15px;
+    border: 1px solid #ff0000;
+    border-radius: 10px;
+    background: rgba(255,0,0,0.12);
+    color: #ff6666;
+    font-weight: bold;
+    text-align: center;
+    font-size: 17px;
+    text-shadow: 0 0 6px red;
+    box-shadow: 0 0 12px rgba(255,0,0,0.3);
+    letter-spacing: 1px;
+">
+    Only brother: ⛧ Joined the chat ⛧
+</div>
   <div id="messages"></div>
-
   <div id="inputBar">
     <input id="input" placeholder="Say something..." autocomplete="off"/>
     <button id="sendButton">Send</button>
     <button id="clearButton">Clear</button>
   </div>
 </div>
+<audio id="ritualBass" src="https://files.catbox.moe/0xuz1x.mp3"></audio>
 <!-- 3D RED SPHERE -->
 <script>
 const container = document.getElementById("threeSphere");
@@ -297,6 +314,7 @@ const db = getDatabase(app);
 const chatRef = ref(db,"chat");
 const viewersRef = ref(db,"viewers");
 const globalCountdownRef = ref(db,"globalCountdown");
+const chatAllowedRef = ref(db,"chatAllowed"); // جديد: قائمة IDs المسموح لهم بالكتابة
 
 // ====== DOM Elements ======
 const namePrompt = document.getElementById("namePrompt");
@@ -326,6 +344,7 @@ const totalDuration = 180;
 set(visitorRef,{ name:"Guest" });
 onDisconnect(visitorRef).remove();
 
+// ====== تحديث عدد المشاهدين ======
 onValue(viewersRef, snap=>{
   let v = snap.val();
   let count = v ? Object.keys(v).length : 0;
@@ -354,43 +373,71 @@ async function startCamera() {
     }
 }
 
-// ====== Chat Handling ======
-joinBtn.onclick = ()=>{
-  let name = nameInput.value.trim();
-  if(!name){ alert("Enter a name"); return; }
+// ====== عند بدء العداد ======
+onValue(globalCountdownRef, snap => {
+  const data = snap.val();
+  if(data && data.startTime){
+    startLocal(data.startTime);
+    pickRandomChatters(); 
+  }
+});
 
-  userName = name;
-  set(visitorRef,{name:userName});
-  namePrompt.style.display="none";
-  messagesDiv.style.display="block";
-  inputBar.style.display="flex";
-  messagesDiv.classList.add('visible');
-  inputBar.classList.add('visible');
-  startCamera();
-};
+function pickRandomChatters() {
+  onValue(viewersRef, snap => {
+    const viewers = snap.val();
+    if(!viewers) return;
 
+    const viewerIds = Object.keys(viewers);
+    const shuffled = viewerIds.sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, 3);
+
+    allowedChatters = {}; 
+    selected.forEach(id => allowedChatters[id] = true);
+
+    set(chatAllowedRef, allowedChatters);
+
+    if(allowedChatters[visitorId]){
+      inputBar.style.display = "flex";
+      input.placeholder = "🪶 You are allowed to chat...";
+    } else {
+      inputBar.style.display = "none";
+    }
+  }, { onlyOnce:true });
+}
+
+// ====== إرسال الرسائل ======
 sendBtn.onclick = ()=>{
   let txt = input.value.trim();
   if(txt && userName){
-    push(chatRef,{ user:userName, text:txt, timestamp:serverTimestamp() });
+    push(chatRef,{
+      userName: userName,
+      userId: visitorId,
+      text: txt,
+      timestamp: serverTimestamp()
+    });
     input.value="";
   }
 };
-input.onkeydown = e=>{ if(e.key==="Enter") sendBtn.onclick(); };
+input.onkeydown = e => { if(e.key==="Enter") sendBtn.onclick(); };
 
-clearBtn.onclick = ()=>{
-  if(confirm("Clear chat?")){
-    remove(chatRef);
-    messagesDiv.innerHTML="";
-  }
-};
+// ====== عرض كل الرسائل للجميع ======
+onChildAdded(chatRef, snap => {
+  const msg = snap.val();
+  if(!msg.userName) return;
 
-let joinTime = Date.now();
-onChildAdded(chatRef, snap=>{
-  let msg = snap.val();
-  if(msg.timestamp && msg.timestamp < joinTime - 5000) return;
   let div = document.createElement("div");
-  div.textContent = `${msg.user}: ${msg.text}`;
+  div.textContent = `${msg.userName}: ${msg.text || ''}`;
+  
+  onValue(chatAllowedRef, chatSnap => {
+    const allowed = chatSnap.val() || {};
+    if(allowed[msg.userId]){
+      div.style.color = "#ff0000"; // أحمر للمسموح لهم
+      div.style.fontWeight = "bold";
+    } else {
+      div.style.color = "#ff6666"; // باقي المستخدمين
+    }
+  }, { onlyOnce:true });
+
   messagesDiv.appendChild(div);
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 });
