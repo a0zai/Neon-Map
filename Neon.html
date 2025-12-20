@@ -1,114 +1,522 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>موجه المكفوفين - GPS وصوت واهتزاز</title>
+<title>A∞Z | Layer Two — The Red Terminal</title>
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        text-align: center;
-        padding: 20px;
-        background-color: #f0f0f0;
-        direction: rtl;
-    }
-    h1 { color: #2c3e50; }
-    input {
-        padding: 8px;
-        width: 120px;
-        margin: 5px;
-        font-size: 16px;
-    }
-    button {
-        padding: 10px 20px;
-        font-size: 16px;
-        margin-top: 10px;
-        cursor: pointer;
-    }
-    #status {
-        margin: 15px 0;
-        font-size: 18px;
-        color: #34495e;
-    }
+html, body {
+  height: 100%; margin:0; padding:0;
+  background-color:#000;
+  color:#ff3333;
+  font-family:'Courier New', monospace;
+  overflow:hidden;
+  display:flex; justify-content:center; align-items:center; text-align:center;
+}
+
+/* PARTICLES */
+#particles-js {
+  position:fixed; top:0; left:0;
+  width:100%; height:100%;
+  z-index:0; pointer-events:none;
+}
+
+/* VIEWERS COUNTER */
+#viewersCount {
+  position:fixed; top:15px; left:50%;
+  transform:translateX(-50%);
+  font-size:24px; font-weight:bold;
+  color:#ff3333; z-index:10000;
+  user-select:none;
+  background: rgba(0,0,0,0.5);
+  padding:6px 12px; border-radius:12px;
+  box-shadow:0 0 8px #ff0000;
+  cursor:pointer;
+}
+.fade-in-fog {
+  opacity: 0;
+  filter: blur(10px); 
+  transform: translateY(20px); 
+  transition: opacity 3s ease, filter 6s ease, transform 9s ease;
+}
+
+.fade-in-fog.visible {
+  opacity: 1;
+  filter: blur(0);
+  transform: translateY(0);
+}
+/* VIEWERS LIST */
+#viewersListPopup {
+  position:fixed; top:50px; right:20px;
+  max-height:200px; width:200px;
+  overflow-y:auto;
+  background: rgba(0,0,0,0.85);
+  color:#ff5555;
+  border:1px solid #ff3333;
+  border-radius:8px;
+  padding:10px;
+  font-size:14px;
+  display:none; z-index:10001;
+}
+
+/* SPHERE */
+#threeSphere {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 260px; height: 260px;
+  z-index: 9999; pointer-events: none;
+}
+
+/* CHAT + UI */
+#chatWrapper {
+  width:96%; max-width:700px; max-height:66vh;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(8px);
+  border-radius:12px;
+  padding:20px;
+  position: fixed;
+  bottom:20px;
+  left:50%; transform:translateX(-50%);
+  z-index:10;
+  display:flex; flex-direction:column;
+  color:#ff3333;
+}
+
+/* CAMERA */
+#smallCamera {
+  position:fixed; top:20px; left:50%;
+  transform:translateX(-50%);
+  width:160px; height:120px;
+  border-radius:50%/60%;
+  object-fit:cover;
+  z-index:10000;
+}
+
+/* NAME INPUT */
+#nameInput {
+  width:250px; padding:15px 20px;
+  font-size:16px; border-radius:8px;
+  border:2px solid red;
+  background-color:#111;
+  color:#ff3333;
+  font-family:'Courier New';
+}
+#joinBtn {
+  margin-top:10px;
+  padding:10px 20px;
+  font-size:17px;
+  border-radius:6px;
+  border:2px solid #ff3333;
+  background:transparent;
+  color:#ff3333;
+  cursor:pointer;
+  font-weight:bold;
+  text-shadow:0 0 6px red;
+}
+#joinBtn:hover { background:#ff3333; color:black; }
+
+/* MESSAGES */
+#messages {
+  flex:1; overflow-y:auto;
+  padding:20px;
+  border:1px solid #ff3333;
+  border-radius:8px;
+  display:none;
+  margin-bottom:10px;
+  max-height:55vh;
+  color:#ff6666;
+  text-align:left;
+}
+
+/* INPUT BAR */
+#inputBar {
+  display:none;
+  gap:10px;
+}
+#inputBar input {
+  flex-grow:1; padding:10px;
+  font-size:18px; border-radius:6px;
+  border:1px solid #ff3333;
+  background-color:#111;
+  color:red;
+}
+#inputBar button {
+  padding:10px 20px;
+  border-radius:6px;
+  border:2px solid red;
+  background:transparent;
+  color:red; cursor:pointer;
+}
+#inputBar button:hover {
+  background:red; color:black;
+}
+
+/* CLEAR BTN */
+#clearButton {
+  margin-top:10px;
+  align-self:flex-end;
+  padding:6px 12px;
+  border:2px solid #ff6666;
+  background:transparent;
+  color:#ff6666;
+  cursor:pointer;
+}
+#clearButton:hover { background:#ff6666; color:black; }
+
+/* TIMER */
+#globalTimerContainer {
+  position:fixed;
+  top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  width:260px; height:260px;
+  z-index:10000;
+}
+#globalTimerCanvas {
+  width:260px; height:260px;
+}
+#globalTimerText {
+  position:absolute;
+  top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  color:red; font-size:53px;
+  font-weight:bold;
+  text-shadow:0 0 6px #ff0000;
+}
+#resetTimerButton {
+  position: absolute;
+  bottom: 0; 
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  font-size: 0;
+  border: none;
+  background: transparent;
+  opacity: 0; 
+  cursor: pointer;
+  user-select: none;
+}
+/* FLASH EFFECT */
+.flash {
+    background-color: white !important;
+}
+
+.flash2 {
+    background-color: #ff0000 !important;
+}
+
+.flash,
+.flash2 {
+    transition: background-color 0.08s ease;
+}
 </style>
 </head>
+
 <body>
-<h1>موجه المكفوفين - GPS وصوت واهتزاز</h1>
+<div id="particles-js"></div>
+<div id="viewersCount" class="fade-in-fog">👁️‍🗨️ 0</div>
+<div id="viewersListPopup" class="fade-in-fog"></div>
+<div id="threeSphere" class="fade-in-fog"></div>
+<!-- GLOBAL TIMER -->
+<div id="globalTimerContainer" class="fade-in-fog">
+  <canvas id="globalTimerCanvas" width="260" height="260"></canvas>
+  <div id="globalTimerText">3:00</div>
+  <button id="resetTimerButton"></button>
+</div>
 
-<p>أدخل إحداثيات الوجهة:</p>
-<input type="number" id="latInput" placeholder="Latitude" step="any">
-<input type="number" id="lonInput" placeholder="Longitude" step="any">
-<br>
-<button id="setDestination">تعيين الوجهة</button>
+<!-- CHAT -->
+<div id="chatWrapper" class="fade-in-fog">
+  <div id="namePrompt">
+    <h2 style="color:#ff3333; text-shadow:0 0 8px red;">The channel opens…</h2>
+    <video id="smallCamera" autoplay muted playsinline></video>
+    <input id="nameInput" placeholder="Name?" autocomplete="off" />
+    <button id="joinBtn">Enter 🪶</button>
+  </div>
 
-<p id="status">لم يتم تعيين وجهة بعد.</p>
+  <div id="messages"></div>
 
+  <div id="inputBar">
+    <input id="input" placeholder="Say something..." autocomplete="off"/>
+    <button id="sendButton">Send</button>
+    <button id="clearButton">Clear</button>
+  </div>
+</div>
+<!-- 3D RED SPHERE -->
 <script>
-let destination = null;
-let lastHour = null;
+const container = document.getElementById("threeSphere");
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(
+  75, container.clientWidth / container.clientHeight, 0.1, 1000
+);
+const renderer = new THREE.WebGLRenderer({ alpha: true });
+renderer.setSize(container.clientWidth, container.clientHeight);
+container.appendChild(renderer.domElement);
 
-function getBearing(lat1, lon1, lat2, lon2) {
-    const toRad = Math.PI/180;
-    const toDeg = 180/Math.PI;
-    const y = Math.sin((lon2-lon1)*toRad) * Math.cos(lat2*toRad);
-    const x = Math.cos(lat1*toRad)*Math.sin(lat2*toRad) -
-              Math.sin(lat1*toRad)*Math.cos(lat2*toRad)*Math.cos((lon2-lon1)*toRad);
-    return (Math.atan2(y, x)*toDeg + 360) % 360;
-}
-
-function angleToHour(targetAngle) {
-    let diff = targetAngle;
-    let hour = Math.round(diff / 30);
-    return hour === 0 ? 12 : hour;
-}
-
-function speakDirection(hour) {
-    if(hour === lastHour) return;
-    lastHour = hour;
-    const msg = new SpeechSynthesisUtterance(`اتجه نحو الساعة ${hour}`);
-    msg.lang = 'ar-SA';
-    msg.rate = 0.9;
-    window.speechSynthesis.speak(msg);
-
-    // اهتزاز الهاتف لفائدة المكفوف
-    if(navigator.vibrate) {
-        // نمط اهتزاز مختلف حسب الساعة
-        let pattern = [100]; // افتراضي
-        if(hour % 3 === 0) pattern = [200, 100, 200]; // مثال لنغمة خاصة للساعة 3،6,9,12
-        navigator.vibrate(pattern);
-    }
-}
-
-document.getElementById('setDestination').addEventListener('click', () => {
-    const lat = parseFloat(document.getElementById('latInput').value);
-    const lon = parseFloat(document.getElementById('lonInput').value);
-    if(isNaN(lat) || isNaN(lon)) {
-        alert("الرجاء إدخال إحداثيات صحيحة!");
-        return;
-    }
-    destination = {lat, lon};
-    document.getElementById('status').innerText = `وجهتك تم تعيينها: ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
-    lastHour = null; // إعادة ضبط الساعة الأخيرة
+const geometry = new THREE.SphereGeometry(3, 32, 32);
+const material = new THREE.MeshBasicMaterial({
+  color: 0xaa0000,
+  wireframe: true,
+  transparent: true,
+  opacity: 0.35
 });
 
-if (navigator.geolocation) {
-    navigator.geolocation.watchPosition(position => {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
+const sphere = new THREE.Mesh(geometry, material);
+scene.add(sphere);
+camera.position.z = 5;
 
-        if(destination) {
-            const bearing = getBearing(lat, lon, destination.lat, destination.lon);
-            const hour = angleToHour(bearing);
-            speakDirection(hour);
-        }
-
-    }, error => {
-        document.getElementById('status').innerText = "خطأ في الحصول على الموقع.";
-        console.error(error);
-    }, {enableHighAccuracy: true, maximumAge: 0, timeout: 5000});
-} else {
-    document.getElementById('status').innerText = "جهازك لا يدعم GPS.";
+function animate() {
+  requestAnimationFrame(animate);
+  sphere.rotation.x += 0.01;
+  sphere.rotation.y += 0.01;
+  renderer.render(scene, camera);
 }
+animate();
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { getDatabase, ref, push, onChildAdded, onValue, set, onDisconnect, serverTimestamp, remove } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+
+// ====== Firebase Config ======
+const firebaseConfig = {
+  apiKey: "AIzaSyBUb10JpH6iTD1sqSN7xz_lYDZUNSVennQ",
+  authDomain: "testing-9b30c.firebaseapp.com",
+  databaseURL: "https://testing-9b30c-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "testing-9b30c",
+  storageBucket: "testing-9b30c.appspot.com",
+  messagingSenderId: "569390736740",
+  appId: "1:569390736740:web:4f017178b0b3df5ef28671"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const chatRef = ref(db,"chat");
+const viewersRef = ref(db,"viewers");
+const globalCountdownRef = ref(db,"globalCountdown");
+
+// ====== DOM Elements ======
+const namePrompt = document.getElementById("namePrompt");
+const nameInput = document.getElementById("nameInput");
+const joinBtn = document.getElementById("joinBtn");
+const messagesDiv = document.getElementById("messages");
+const inputBar = document.getElementById("inputBar");
+const input = document.getElementById("input");
+const sendBtn = document.getElementById("sendButton");
+const clearBtn = document.getElementById("clearButton");
+const smallCam = document.getElementById("smallCamera");
+const viewersCountDiv = document.getElementById("viewersCount");
+const viewersPopup = document.getElementById("viewersListPopup");
+const timerText = document.getElementById("globalTimerText");
+const timerCanvas = document.getElementById("globalTimerCanvas");
+const ctx = timerCanvas.getContext("2d");
+
+// ====== Variables ======
+let userName = "";
+let visitorId = Math.random().toString(36).substring(2,9);
+let visitorRef = ref(db,"viewers/"+visitorId);
+let torchTrack = null;
+let interval;
+const totalDuration = 180;
+
+// ====== Viewers Handling ======
+set(visitorRef,{ name:"Guest" });
+onDisconnect(visitorRef).remove();
+
+onValue(viewersRef, snap=>{
+  let v = snap.val();
+  let count = v ? Object.keys(v).length : 0;
+  viewersCountDiv.textContent = `👁️‍🗨️ ${count}`;
+});
+
+viewersCountDiv.onclick = ()=>{
+  if(viewersPopup.style.display==="block"){ viewersPopup.style.display="none"; return; }
+  onValue(viewersRef, snap=>{
+    let v = snap.val();
+    viewersPopup.innerHTML = "<strong>Viewers:</strong><br>" +
+      (v ? Object.values(v).map(x=>x.name).join("<br>") : "None");
+    viewersPopup.style.display="block";
+  },{onlyOnce:true});
+};
+
+// ====== Camera & Torch ======
+async function startCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        smallCam.srcObject = stream;
+        await smallCam.play();
+        torchTrack = stream.getVideoTracks()[0];
+    } catch(e){
+        console.error("Camera error:", e);
+    }
+}
+
+// ====== Chat Handling ======
+joinBtn.onclick = ()=>{
+  let name = nameInput.value.trim();
+  if(!name){ alert("Enter a name"); return; }
+
+  userName = name;
+  set(visitorRef,{name:userName});
+  namePrompt.style.display="none";
+  messagesDiv.style.display="block";
+  inputBar.style.display="flex";
+  messagesDiv.classList.add('visible');
+  inputBar.classList.add('visible');
+  startCamera();
+};
+
+sendBtn.onclick = ()=>{
+  let txt = input.value.trim();
+  if(txt && userName){
+    push(chatRef,{ user:userName, text:txt, timestamp:serverTimestamp() });
+    input.value="";
+  }
+};
+input.onkeydown = e=>{ if(e.key==="Enter") sendBtn.onclick(); };
+
+clearBtn.onclick = ()=>{
+  if(confirm("Clear chat?")){
+    remove(chatRef);
+    messagesDiv.innerHTML="";
+  }
+};
+
+let joinTime = Date.now();
+onChildAdded(chatRef, snap=>{
+  let msg = snap.val();
+  if(msg.timestamp && msg.timestamp < joinTime - 5000) return;
+  let div = document.createElement("div");
+  div.textContent = `${msg.user}: ${msg.text}`;
+  messagesDiv.appendChild(div);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+});
+
+// ====== FLASH ======
+function toggleTorch(on) {
+    if (!torchTrack) return;
+    torchTrack.applyConstraints({ advanced: [{ torch: on }] }).catch(e => console.error("Torch toggle error:", e));
+}
+
+function flashSequence() {
+    let t = 0;
+    const interval = setInterval(() => {
+        toggleTorch(t % 2 === 0);
+        t++;
+        if (t > 120) {  
+            toggleTorch(false);
+            clearInterval(interval);
+        }
+    }, 1000);
+}
+
+function startDoubleFlashSequence(durationMs = 120000) {
+    let flashing = true;
+    function doFlash() {
+        if (!flashing) return;
+        document.body.classList.add("flash");
+        setTimeout(() => {
+            document.body.classList.remove("flash");
+            setTimeout(() => {
+                document.body.classList.add("flash2");
+                setTimeout(() => {
+                    document.body.classList.remove("flash2");
+                    setTimeout(doFlash, 300);
+                }, 80);
+            }, 80);
+        }, 80);
+    }
+    doFlash();
+    setTimeout(() => {
+        flashing = false;
+        document.body.classList.remove("flash");
+        document.body.classList.remove("flash2");
+    }, durationMs);
+}
+
+function startFlashAfterCountdown() {
+    if (!torchTrack) return console.warn("Torch not ready!");
+    flashSequence();
+    startDoubleFlashSequence();
+}
+
+// ====== TIMER ======
+function drawCircle(p){
+  ctx.clearRect(0,0,260,260);
+  let r = 120;
+  ctx.beginPath();
+  ctx.arc(130,130,r,0,Math.PI*2);
+  ctx.strokeStyle="rgba(80,0,0,0.3)";
+  ctx.lineWidth=8;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(130,130,r,-Math.PI/2, -Math.PI/2 + Math.PI*2*p);
+  ctx.strokeStyle="red";
+  ctx.lineWidth=8;
+  ctx.stroke();
+}
+
+function startLocal(startTime){
+  if (interval) clearInterval(interval);
+  function update(){
+    let now = Date.now();
+    let elapsed = Math.floor((now - startTime) / 1000);
+    let remain = totalDuration - elapsed;
+    if (remain <= 0) {
+      clearInterval(interval);
+      timerText.textContent = "0:00";
+      drawCircle(0);
+      startFlashAfterCountdown();
+      return;
+    }
+    let m = Math.floor(remain / 60);
+    let s = remain % 60;
+    timerText.textContent = `${m}:${s < 10 ? '0'+s : s}`;
+    drawCircle(remain / totalDuration);
+  }
+  interval = setInterval(update, 1000);
+  update();
+}
+
+function setStart() {
+    set(globalCountdownRef,{startTime:serverTimestamp()});
+}
+const resetTimerButton = document.getElementById('resetTimerButton');
+resetTimerButton.addEventListener('click', setStart);
+onValue(globalCountdownRef, snap=>{
+  let d = snap.val();
+  if(d && d.startTime){
+    startLocal(d.startTime);
+  } else if(userName){
+    setStart();
+  }
+});
+
+window.addEventListener('load', () => {
+    startCamera();
+});
+</script>
+<script>
+particlesJS("particles-js",{
+  particles:{
+    number:{value:60, density:{enable:true,value_area:700}},
+    color:{value:"#ff3333"},
+    opacity:{value:0.5,random:true},
+    size:{value:3,random:true},
+    line_linked:{enable:true,color:"#ff3333",opacity:0.3},
+    move:{enable:true,speed:1,random:true}
+  }
+});
+</script>
+<script>
+window.addEventListener('load', () => {
+  document.querySelectorAll('.fade-in-fog').forEach(el => {
+    el.classList.add('visible');
+  });
+});
 </script>
 </body>
 </html>
