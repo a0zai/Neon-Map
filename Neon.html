@@ -1,33 +1,33 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <title>Spraak Navigatie Assistent</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Spraak Navigatie Assistent</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body style="background:#000;color:#fff;font-size:1.5em;text-align:center;">
-  <p>Druk ergens op het scherm om de microfoon te activeren.</p>
+<p>Druk ergens op het scherm om de microfoon te activeren.</p>
 
 <script>
 let started = false;
+let navigating = false;
+let destLat = null, destLng = null;
 
-// 🎙️ النطق الصوتي
+// النطق الصوتي
 function speak(text, callback){
   speechSynthesis.cancel();
   const msg = new SpeechSynthesisUtterance(text);
   msg.lang = "nl-NL";
   msg.rate = 1;
   msg.pitch = 1;
-
   const voices = speechSynthesis.getVoices();
   const humanVoice = voices.find(v => v.lang==="nl-NL" && v.name.toLowerCase().includes("google")) || voices[0];
   if(humanVoice) msg.voice = humanVoice;
-
   msg.onend = callback;
   speechSynthesis.speak(msg);
 }
 
-// 🎧 الاستماع للمستخدم
+// الاستماع للمستخدم
 function startListening(){
   if(!('webkitSpeechRecognition' in window)){
     speak("Deze browser ondersteunt geen spraakherkenning.");
@@ -42,35 +42,7 @@ function startListening(){
 
   recognition.onresult = async (event)=>{
     const destination = event.results[0][0].transcript;
-    speak("Ik zoek naar " + destination);
-
-    // استخدام OpenStreetMap API للحصول على إحداثيات الوجهة
-    try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(destination)}`);
-      const data = await res.json();
-      if(data && data[0]){
-        const destLat = parseFloat(data[0].lat);
-        const destLng = parseFloat(data[0].lon);
-
-        // الحصول على الموقع الحالي
-        if(navigator.geolocation){
-          navigator.geolocation.getCurrentPosition(pos=>{
-            const userLat = pos.coords.latitude;
-            const userLng = pos.coords.longitude;
-
-            navigate(userLat,userLng,destLat,destLng);
-          });
-        }
-      } else {
-        speak("Ik kon de locatie niet vinden.");
-      }
-    } catch(e){
-      console.log(e);
-      speak("Er is een fout opgetreden bij het zoeken naar de bestemming.");
-    }
-
-    // إعادة الاستماع
-    setTimeout(startListening,1500);
+    speak("U zei: " + destination + ". Is dit correct? Zeg ja of nee.", ()=>confirmDestination(destination));
   };
 
   recognition.onerror = ()=>{
@@ -78,46 +50,98 @@ function startListening(){
   };
 }
 
-// 🧭 حساب المسافة والاتجاه بالساعة
-function navigate(userLat,userLng,destLat,destLng){
-  function getDistance(lat1,lon1,lat2,lon2){
-    const R = 6371000;
-    const toRad = x => x*Math.PI/180;
-    const dLat = toRad(lat2-lat1);
-    const dLon = toRad(lon2-lon1);
-    const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
-    const c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-    return R*c;
-  }
+// تأكيد الوجهة
+function confirmDestination(destination){
+  if(!('webkitSpeechRecognition' in window)) return;
 
-  function getClockDirection(lat1,lon1,lat2,lon2){
-    const toDeg = x => x*180/Math.PI;
-    const y = Math.sin(lon2-lon1)*Math.cos(lat2);
-    const x = Math.cos(lat1)*Math.sin(lat2)-Math.sin(lat1)*Math.cos(lat2)*Math.cos(lon2-lon1);
-    let brng = (toDeg(Math.atan2(y,x))+360)%360;
-    const hour = Math.round(brng/30)||12;
-    return hour;
-  }
+  const recognition = new webkitSpeechRecognition();
+  recognition.lang="nl-NL";
+  recognition.continuous=false;
+  recognition.interimResults=false;
+  recognition.start();
 
-  const distance = Math.round(getDistance(userLat,userLng,destLat,destLng));
-  const hour = getClockDirection(userLat,userLng,destLat,destLng);
+  recognition.onresult = async (event)=>{
+    const answer = event.results[0][0].transcript.toLowerCase();
+    if(answer.includes("ja")){
+      speak("Oké, ik begin met de navigatie.", ()=>getDestinationCoords(destination));
+    } else {
+      speak("Probeer opnieuw.", ()=>startListening());
+    }
+  };
 
-  if(distance>10){
-    speak(`Na ${distance} meter, sla af bij uur ${hour}`, ()=>{
-      // إعادة تحديث كل 10 ثواني
-      navigator.geolocation.getCurrentPosition(pos=>{
-        navigate(pos.coords.latitude,pos.coords.longitude,destLat,destLng);
-      });
-    });
-  } else {
-    speak("U bent aangekomen op uw bestemming.");
+  recognition.onerror = ()=>{
+    speak("Ik heb u niet goed verstaan.", ()=>confirmDestination(destination));
+  };
+}
+
+// الحصول على إحداثيات الوجهة باستخدام OpenStreetMap Nominatim (مجاني)
+async function getDestinationCoords(destination){
+  try{
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(destination)}`);
+    const data = await res.json();
+    if(data && data[0]){
+      destLat = parseFloat(data[0].lat);
+      destLng = parseFloat(data[0].lon);
+      navigating = true;
+      startNavigation();
+    } else {
+      speak("Ik kon de locatie niet vinden.", ()=>startListening());
+    }
+  } catch(e){
+    console.log(e);
+    speak("Er is een fout opgetreden bij het zoeken naar de bestemming.", ()=>startListening());
   }
 }
 
-// 👆 أول نقرة لتفعيل الميكروفون
+// التوجيه الصوتي
+function startNavigation(){
+  if(!navigator.geolocation || !navigating) return;
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const userLat = pos.coords.latitude;
+    const userLng = pos.coords.longitude;
+
+    const distance = getDistance(userLat,userLng,destLat,destLng);
+    const hour = getClockDirection(userLat,userLng,destLat,destLng);
+
+    if(distance>10){
+      if(distance < 15) speak(`Bijna bij de afslag, sla af bij uur ${hour}`);
+      else if(distance < 50) speak(`In ${Math.round(distance)} meter, sla af bij uur ${hour}`);
+      else speak(`Na ${Math.round(distance)} meter, sla af bij uur ${hour}`);
+
+      setTimeout(()=>startNavigation(),5000); // تحديث كل 5 ثواني
+    } else {
+      speak("U bent aangekomen op uw bestemming.");
+      navigating = false;
+      setTimeout(()=>startListening(),1500);
+    }
+  });
+}
+
+// حساب المسافة
+function getDistance(lat1,lon1,lat2,lon2){
+  const R = 6371000;
+  const toRad = x => x*Math.PI/180;
+  const dLat = toRad(lat2-lat1);
+  const dLon = toRad(lon2-lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  const c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  return R*c;
+}
+
+// حساب اتجاه الساعة
+function getClockDirection(lat1,lon1,lat2,lon2){
+  const toDeg = x => x*180/Math.PI;
+  const y = Math.sin(lon2-lon1)*Math.cos(lat2);
+  const x = Math.cos(lat1)*Math.sin(lat2)-Math.sin(lat1)*Math.cos(lat2)*Math.cos(lon2-lon1);
+  let brng = (toDeg(Math.atan2(y,x))+360)%360;
+  const hour = Math.round(brng/30)||12;
+  return hour;
+}
+
+// أول نقرة لتفعيل الميكروفون
 document.body.addEventListener("click",()=>{
   if(started) return;
-  started=true;
+  started = true;
   speak("Toestemming gevraagd. Zeg nu uw bestemming.", ()=>startListening());
 });
 
