@@ -155,8 +155,8 @@ fetch("https://api.ipify.org?format=json")
   .then(r => r.json())
   .then(data => {
       const lines = [
-      "When you realize you're finished..",
-      "Draw the finish line yourself."
+      "You think you’re lost.",
+      "You’re just offline."
       ];
       runSequence(lines);
   })
@@ -171,7 +171,7 @@ fetch("https://api.ipify.org?format=json")
 particlesJS("particles-js", {
     particles: {
         number: { value:200, density:{ enable:true, value_area:1800 } },
-        color: { value:"#ffffff" },
+        color: { value:"#2b153f" },
         shape: { type:"circle" },
         opacity: { value:0.7, random:true },
         size: { value:1.5, random:true },
