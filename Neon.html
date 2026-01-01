@@ -1,153 +1,189 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Spraak Navigatie Assistent</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="application-name" content="A0Z">
+<meta name="author" content="system">
+<meta name="generator" content="custom-static">
+<meta name="classification" content="web-interface">
+<meta name="subject" content="real-time interaction">
+<title>A∞Z</title>
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+<style>
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: #000;
+    font-family: 'Courier New', monospace;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+#particles-js {
+    position: fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    z-index:0;
+    pointer-events:none;
+}
+#output { 
+    opacity:1;
+    transform: translateY(0);
+    white-space: pre-wrap;
+    z-index:10;
+    color: #eaeaea;
+    text-shadow: 0 0 8px rgba(255,255,255,0.7);
+}
+.line {
+    margin-bottom:0.7em;
+    opacity:0;
+    transform: translateY(20px);
+    transition: opacity 2s ease, transform 2s ease;
+}
+.line.visible {
+    opacity:1;
+    transform: translateY(0);
+}
+
+.glitch {
+    font-weight:bold;
+    letter-spacing:1px;
+    color:#00ff00;
+    text-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00;
+    animation: glitchAnim 0.12s steps(2, jump-end) infinite;
+}
+@keyframes glitchAnim {
+    0% { transform:translate(1px,-1px); }
+    50% { transform:translate(-2px,2px); }
+    100% { transform:translate(1px,-1px); }
+}
+
+.shake {
+    animation: shakeAnim 0.35s ease-in-out;
+}
+@keyframes shakeAnim {
+    0% { transform:translateX(0); }
+    20% { transform:translateX(-4px); }
+    40% { transform:translateX(4px); }
+    60% { transform:translateX(-3px); }
+    80% { transform:translateX(3px); }
+    100% { transform:translateX(0); }
+}
+
+/* Fade black at the end */
+#fade-black {
+    position: fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:#000;
+    pointer-events:none;
+    opacity:0;
+    z-index:999;
+    transition: opacity 3s ease;
+}
+</style>
 </head>
-<body style="background:#000;color:#fff;font-size:1.5em;text-align:center;">
-<p>Druk ergens op het scherm om de microfoon te activeren.</p>
+<body>
+<div id="particles-js"></div>
+<div id="output"></div>
+<div id="fade-black"></div>
 
 <script>
-let started = false;
-let navigating = false;
-let destLat = null, destLng = null;
+/* ---- TYPEWRITER EFFECT ---- */
+function typeLine(text, callback) {
+    const container = document.getElementById("output");
+    const line = document.createElement("div");
+    line.className = "line";
+    container.appendChild(line);
 
-// النطق الصوتي
-function speak(text, callback){
-  speechSynthesis.cancel();
-  const msg = new SpeechSynthesisUtterance(text);
-  msg.lang = "nl-NL";
-  msg.rate = 1;
-  msg.pitch = 1;
-  const voices = speechSynthesis.getVoices();
-  const humanVoice = voices.find(v => v.lang==="nl-NL" && v.name.toLowerCase().includes("google")) || voices[0];
-  if(humanVoice) msg.voice = humanVoice;
-  msg.onend = callback;
-  speechSynthesis.speak(msg);
-}
+    setTimeout(() => line.classList.add('visible'), 50);
 
-// الاستماع للمستخدم
-function startListening(){
-  if(!('webkitSpeechRecognition' in window)){
-    speak("Deze browser ondersteunt geen spraakherkenning.");
-    return;
-  }
-
-  const recognition = new webkitSpeechRecognition();
-  recognition.lang="nl-NL";
-  recognition.continuous=false;
-  recognition.interimResults=false;
-  recognition.start();
-
-  recognition.onresult = async (event)=>{
-    const destination = event.results[0][0].transcript;
-    speak("U zei: " + destination + ". Is dit correct? Zeg ja of nee.", ()=>confirmDestination(destination));
-  };
-
-  recognition.onerror = ()=>{
-    speak("Ik heb u niet goed verstaan.", ()=>setTimeout(startListening,1500));
-  };
-}
-
-// تأكيد الوجهة
-function confirmDestination(destination){
-  if(!('webkitSpeechRecognition' in window)) return;
-
-  const recognition = new webkitSpeechRecognition();
-  recognition.lang="nl-NL";
-  recognition.continuous=false;
-  recognition.interimResults=false;
-  recognition.start();
-
-  recognition.onresult = async (event)=>{
-    const answer = event.results[0][0].transcript.toLowerCase();
-    if(answer.includes("ja")){
-      speak("Oké, ik begin met de navigatie.", ()=>getDestinationCoords(destination));
-    } else {
-      speak("Probeer opnieuw.", ()=>startListening());
+    let i = 0;
+    function type() {
+        if(i < text.length){
+            line.textContent += text[i];
+            i++;
+            const jitter = Math.random() * 80;
+            setTimeout(type, 180 + jitter);
+        } else {
+            if(callback) setTimeout(callback, 200);
+        }
     }
-  };
-
-  recognition.onerror = ()=>{
-    speak("Ik heb u niet goed verstaan.", ()=>confirmDestination(destination));
-  };
+    type();
 }
 
-// الحصول على إحداثيات الوجهة باستخدام OpenStreetMap Nominatim (مجاني)
-async function getDestinationCoords(destination){
-  try{
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(destination)}`);
-    const data = await res.json();
-    if(data && data[0]){
-      destLat = parseFloat(data[0].lat);
-      destLng = parseFloat(data[0].lon);
-      navigating = true;
-      startNavigation();
-    } else {
-      speak("Ik kon de locatie niet vinden.", ()=>startListening());
-    }
-  } catch(e){
-    console.log(e);
-    speak("Er is een fout opgetreden bij het zoeken naar de bestemming.", ()=>startListening());
-  }
+/* ---- RANDOM GLITCH ---- */
+function glitchFx() {
+    const out = document.getElementById("output");
+    const g = document.createElement("div");
+    g.className = "line glitch";
+    g.textContent = "!! SIGNAL DISTORTION DETECTED !!";
+    out.appendChild(g);
+    setTimeout(() => g.remove(), 500);
 }
 
-// التوجيه الصوتي
-function startNavigation(){
-  if(!navigator.geolocation || !navigating) return;
-  navigator.geolocation.getCurrentPosition(pos=>{
-    const userLat = pos.coords.latitude;
-    const userLng = pos.coords.longitude;
+/* ---- MASTER SEQUENCE ---- */
+function runSequence(lines, index=0) {
+    if(index >= lines.length){
+        const fade = document.getElementById("fade-black");
+        fade.style.opacity = 1;
 
-    const distance = getDistance(userLat,userLng,destLat,destLng);
-    const hour = getClockDirection(userLat,userLng,destLat,destLng);
+        fade.addEventListener("transitionend", () => {
+            window.location.href = "index.html";
+        }, { once: true });
 
-    if(distance>10){
-      if(distance < 15) speak(`Bijna bij de afslag, sla af bij uur ${hour}`);
-      else if(distance < 50) speak(`In ${Math.round(distance)} meter, sla af bij uur ${hour}`);
-      else speak(`Na ${Math.round(distance)} meter, sla af bij uur ${hour}`);
-
-      setTimeout(()=>startNavigation(),5000); // تحديث كل 5 ثواني
-    } else {
-      speak("U bent aangekomen op uw bestemming.");
-      navigating = false;
-      setTimeout(()=>startListening(),1500);
+        return;
     }
+
+    typeLine(lines[index], () => {
+        if(Math.random() < 0.22) glitchFx();
+        if(lines[index].includes("FAILED") || lines[index].includes("Unknown")){
+            const last = document.querySelector(".line:last-child");
+            last.classList.add("shake");
+        }
+        runSequence(lines, index+1);
+    });
+}
+
+/* ---- START ---- */
+fetch("https://api.ipify.org?format=json")
+  .then(r => r.json())
+  .then(data => {
+      const lines = [
+      "When you realize you're finished..",
+      "Draw the finish line yourself."
+      ];
+      runSequence(lines);
+  })
+  .catch(() => {
+      runSequence([
+          "[ A∞Z / FAILURE ]",
+          "Closing connection..."
+      ]);
   });
-}
 
-// حساب المسافة
-function getDistance(lat1,lon1,lat2,lon2){
-  const R = 6371000;
-  const toRad = x => x*Math.PI/180;
-  const dLat = toRad(lat2-lat1);
-  const dLon = toRad(lon2-lon1);
-  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
-  const c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-  return R*c;
-}
-
-// حساب اتجاه الساعة
-function getClockDirection(lat1,lon1,lat2,lon2){
-  const toDeg = x => x*180/Math.PI;
-  const y = Math.sin(lon2-lon1)*Math.cos(lat2);
-  const x = Math.cos(lat1)*Math.sin(lat2)-Math.sin(lat1)*Math.cos(lat2)*Math.cos(lon2-lon1);
-  let brng = (toDeg(Math.atan2(y,x))+360)%360;
-  const hour = Math.round(brng/30)||12;
-  return hour;
-}
-
-// أول نقرة لتفعيل الميكروفون
-document.body.addEventListener("click",()=>{
-  if(started) return;
-  started = true;
-  speak("Toestemming gevraagd. Zeg nu uw bestemming.", ()=>startListening());
+/* ---- PARTICLES ---- */
+particlesJS("particles-js", {
+    particles: {
+        number: { value:200, density:{ enable:true, value_area:1800 } },
+        color: { value:"#ffffff" },
+        shape: { type:"circle" },
+        opacity: { value:0.7, random:true },
+        size: { value:1.5, random:true },
+        line_linked: { enable:false },
+        move: { enable:true, speed:0.5, random:true, straight:false, out_mode:"out" }
+    },
+    interactivity: {
+        detect_on:"canvas",
+        events:{ onhover:{ enable:false }, onclick:{ enable:false } }
+    },
+    retina_detect:true
 });
-
-// تعليمات أولية
-window.onload = ()=>{ speak("Tik één keer in het midden van het scherm om de microfoon toe te staan."); };
 </script>
-
 </body>
 </html>
