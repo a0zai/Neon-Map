@@ -253,49 +253,24 @@ VANTA.FOG({
     zoom: 1.15
 });
 particlesJS("particles-stars", {
-  particles: {
-    number: { value: 70, density: { enable: true, value_area: 800 } },
-    color: { value: "#ffffff" },
-    opacity: { 
-      value: 0.6, 
-      random: true,
-      anim: { enable: true, speed: 1.5, opacity_min: 0.2, sync: false }
+    particles: {
+        number: { value: 72, density: { enable: true, value_area: 800 } },
+        color: { value: "#ffffff" },
+        opacity: { 
+            value: 0.6, 
+            random: true,
+            anim: { enable: true, speed: 2.5, opacity_min: 0.2, sync: false }
+        },
+        size: { 
+            value: 1.5, 
+            random: true,
+            anim: { enable: true, speed: 3, size_min: 0.5, sync: false }
+        },
+        move: { enable: true, speed: 0.3, direction: "none", random: true },
+        line_linked: { enable: false }
     },
-    size: { 
-      value: 1.5, 
-      random: true,
-      anim: { enable: true, speed: 2, size_min: 0.5, sync: false }
-    },
-    move: { 
-      enable: true, 
-      speed: 0.3, 
-      direction: "none", 
-      random: true, 
-      straight: false 
-    }
-  },
-  retina_detect: true,
-  interactivity: { detect_on: "canvas", events: { onhover: { enable: false } } }
+    retina_detect: true
 });
-setInterval(() => {
-  const canvas = document.querySelector('#particles-stars canvas');
-  const ctx = canvas.getContext('2d');
-  const x = Math.random() * canvas.width;
-  const y = Math.random() * canvas.height / 2; 
-  let length = 100;
-  let speed = 8 + Math.random() * 4;
-  let angle = Math.random() * 0.2 - 0.1; 
-
-  function drawMeteor() {
-    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x - length * Math.cos(angle), y - length * Math.sin(angle));
-    ctx.stroke();
-  }
-  drawMeteor();
-}, 5000);
 </script>
 </body>
 </html>
