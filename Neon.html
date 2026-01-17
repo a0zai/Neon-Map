@@ -38,7 +38,6 @@
             position: relative;
             width: 400px;
             height: 400px;
-            border: 8px solid #cc7a7a;
             border-radius: 50%;
             box-shadow: 0 0 50px rgba(0,0,0,0.5), inset 0 0 20px rgba(0,0,0,0.5);
         }
@@ -54,6 +53,18 @@
             letter-spacing: 3px;
             text-shadow: 0 0 10px #00ff88;
         }
+
+    .brand-name {
+        position: absolute;
+        top: 72%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #b2f2bb;
+        font-size: 14px;
+        letter-spacing: 7px;
+        opacity: 0.6;
+        text-transform: uppercase;
+    }
 
         .center-dot {
             position: absolute;
@@ -108,9 +119,8 @@
     </style>
 </head>
 <body>
-
     <div id="particles-js"></div>
-
+    <div class="brand-name">SEENSEE</div>
     <div class="main-content">
         <div class="title">SEENSEE</div>
         <div class="clock-container">
