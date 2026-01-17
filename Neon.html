@@ -40,7 +40,7 @@ html, body {
 /* Main content */
 .main-content {
     position: relative;
-    z-index: 0;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -265,9 +265,9 @@ particlesJS("particles-stars", {
         size: { 
             value: 1.5, 
             random: true,
-            anim: { enable: true, speed: 3, size_min: 0.5, sync: false }
+            anim: { enable: true, speed: 2, size_min: 0.5, sync: false }
         },
-        move: { enable: true, speed: 0.3, direction: "none", random: true },
+        move: { enable: true, speed: 0.2, direction: "none", random: true },
         line_linked: { enable: false }
     },
     retina_detect: true
@@ -275,7 +275,7 @@ particlesJS("particles-stars", {
 particlesJS("particles-movement", {
     particles: {
         number: { value: 27, density: { enable: true, value_area: 600 } },
-        color: { value: "#b19cd9" }, 
+        color: { value: "#7b5fc0" }, 
         shape: { type: "circle" },
         opacity: { value: 0.7, random: true },
         size: { value: 2, random: true },
