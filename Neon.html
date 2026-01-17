@@ -64,6 +64,19 @@ html, body {
         0 0 50px rgba(0,0,0,0.6),
         inset 0 0 20px rgba(0,0,0,0.6);
 }
+.clock-bg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80%;
+    height: 80%;
+    object-fit: cover;
+    border-radius: 50% / 40%;
+    transform: translate(-50%, -50%);
+    opacity: 0.2;
+    z-index: 1;
+    pointer-events: none;
+}
 .glass-cover {
     position: absolute;
     top: 0;
@@ -71,11 +84,12 @@ html, body {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: rgba(255,255,255,0.08); /* زيادة شفافية الأبيض لتلميع أكثر */
-    box-shadow: inset 0 20px 60px rgba(255,255,255,0.15), /* زيادة اللمعان الداخلي */
-                0 0 40px rgba(255,255,255,0.1);          /* لمعان خارجي خفيف */
-    backdrop-filter: blur(4px);                           /* زيادة الضبابية لإحساس العمق */
+    background: rgba(255,255,255,0.08);
+    box-shadow: inset 0 20px 60px rgba(255,255,255,0.15), 
+                0 0 40px rgba(255,255,255,0.1);
+    backdrop-filter: blur(4px); 
     pointer-events: none;
+    z-index: 5;
 }
 /* Hidden core text */
 .clock-container::after {
@@ -162,21 +176,22 @@ html, body {
     width: 6px;
     height: 100px;
     background: rgba(241,245,249,0.25);
+    box-shadow: 0 0 10px rgba(241,245,249,0.3); 
 }
 
 .minute {
     width: 4px;
     height: 140px;
     background: var(--sense-red);
+    box-shadow: 0 0 15px var(--sense-red); 
 }
 
 .second {
     width: 2px;
     height: 160px;
     background: var(--sense-blue);
-}
-
-/* Tagline */
+    box-shadow: 0 0 20px var(--sense-blue);
+}/* Tagline */
 .tagline {
     margin-top: 30px;
     color: #fff;
@@ -195,9 +210,9 @@ html, body {
 <body>
 
 <div id="particles-js"></div>
-
 <div class="main-content">
     <div class="clock-container">
+        <img src="https://avatars.githubusercontent.com/u/201962374?s=96&v=4" alt="Profile" class="clock-bg">
         <div class="glass-cover"></div>
         <div class="brand-name">Seensee</div>
         <div class="center-dot"></div>
