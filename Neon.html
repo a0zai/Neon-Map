@@ -2,20 +2,26 @@
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <title>Seensee - Zero Time</title>
+    <title>Seensee</title>
     <style>
-        body {
-            background: #0f172a;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-            color: white;
-        }
-
+        html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: #000;
+    font-family: 'Courier New', monospace;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    }
+#particles-js {
+    position: fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    z-index:0;
+    pointer-events:none;
+}
         .clock-container {
             position: relative;
             width: 400px;
@@ -27,14 +33,14 @@
         }
 
         .clock-container::after {
-            content: '18 | 81';
+            content: '81 | 18';
             position: absolute;
-            top: 60%;
+            top: 65%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: #64748b;
-            font-size: 14px;
-            letter-spacing: 2px;
+            color: #00ff88);
+            font-size: 33px;
+            letter-spacing: 3px;
         }
 
         .center-dot {
@@ -86,7 +92,7 @@
     </style>
 </head>
 <body>
-    <div class="title">SEENSEE ZERO TIME</div>
+    <div class="title">SEENSEE</div>
     <div class="clock-container">
         <div class="center-dot"></div>
         <div class="number n12"><div>12</div></div>
@@ -105,9 +111,7 @@
         <div class="hand minute" id="minute"></div>
         <div class="hand second" id="second"></div>
     </div>
-
-    <p style="margin-top: 30px; color: #64748b;">The original flow of nature - Counter Clockwise</p>
-
+    <p style="margin-top: 30px; color: #64748b;">‎‏ The instinct of Sensation</p>
     <script>
         function updateClock() {
             const now = new Date();
@@ -125,5 +129,23 @@
         setInterval(updateClock, 1000);
         updateClock();
     </script>
+    <script>
+    particlesJS("particles-js", {
+    particles: {
+        number: { value:200, density:{ enable:true, value_area:1800 } },
+        color: { value:"#ff0000" },
+        shape: { type:"circle" },
+        opacity: { value:0.7, random:true },
+        size: { value:1.5, random:true },
+        line_linked: { enable:false },
+        move: { enable:true, speed:0.5, random:true, straight:false, out_mode:"out" }
+    },
+    interactivity: {
+        detect_on:"canvas",
+        events:{ onhover:{ enable:false }, onclick:{ enable:false } }
+    },
+    retina_detect:true
+});
+</script>
 </body>
 </html>
