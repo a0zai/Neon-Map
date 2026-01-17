@@ -237,20 +237,22 @@ function resetIdle(){
 resetIdle();
 </script>
 <script>
-VANTA.FOG({
-    el: "#vanta-bg",
-    mouseControls: true,
-    touchControls: true,
-    gyroControls: false,
-    minHeight: 200.0,
-    minWidth: 200.0,
-    highlightColor: 0x90e0ef,
-    midtoneColor: 0xb2f2bb,
-    lowlightColor: 0x0b132b,
-    baseColor: 0x000000,
-    blurFactor: 0.45,
-    speed: 0.4,
-    zoom: 1.15
+VANTA.NET({
+  el: "#vanta-bg",
+  mouseControls: true,
+  touchControls: true,
+  gyroControls: false,
+  minHeight: 200.0,
+  minWidth: 200.0,
+  scale: 1.0,
+  scaleMobile: 1.0,
+  color: 0x90e0ef,
+  color2: 0xb2f2bb,
+  backgroundColor: 0x000000,
+  points: 12.0,
+  maxDistance: 22.0,
+  spacing: 18.0,
+  showDots: false
 });
 particlesJS("particles-stars", {
     particles: {
