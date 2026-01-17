@@ -113,7 +113,14 @@
 .hour { width: 6px; height: 100px; background: rgba(241, 245, 249, 0.3); }
 .minute { width: 4px; height: 140px; background: #cc7a7a; } 
 .second { width: 2px; height: 160px; background: #90e0ef; }
-.title { margin-bottom: 20px; font-size: 32px; letter-spacing: 5px; color: #ffffff; text-shadow: 0 0 10px #b2f2bb;}
+.title { 
+    margin-bottom: 30px; 
+    font-size: 36px; 
+    letter-spacing: 12px; 
+    color: #ffffff; 
+    text-shadow: 0 0 10px rgba(178, 242, 187, 0.7), 0 0 20px rgba(178, 242, 187, 0.4);
+    font-weight: 300; 
+}
     </style>
 </head>
 <body>
@@ -162,7 +169,7 @@
                 color: { value: "#00ff88" },
                 shape: { type: "circle" },
                 opacity: { value: 0.5, random: true },
-                size: { value: 1.5, random: true },
+                size: { value: 2.5, random: true },
                 line_linked: { enable: false },
                 move: { enable: true, speed: 1, random: true, straight: false, out_mode: "out" }
             },
