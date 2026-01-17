@@ -6,7 +6,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.fog.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-<canvas id="planets" style="position: fixed; inset:0; z-index:1; pointer-events:none;"></canvas>
 <style>
 :root {
     --sense-green: #b2f2bb;
@@ -254,60 +253,49 @@ VANTA.FOG({
     zoom: 1.15
 });
 particlesJS("particles-stars", {
-    particles: {
-        number: { value: 70, density: { enable: true, value_area: 800 } },
-        color: { value: "#ffffff" },
-        opacity: { 
-            value: 0.6, 
-            random: true,
-            anim: { enable: true, speed: 1.5, opacity_min: 0.2, sync: false }
-        },
-        size: { 
-            value: 1.5, 
-            random: true,
-            anim: { enable: true, speed: 2, size_min: 0.5, sync: false }
-        },
-        move: { enable: true, speed: 0.2, direction: "none", random: true },
-        line_linked: { enable: false }
+  particles: {
+    number: { value: 70, density: { enable: true, value_area: 800 } },
+    color: { value: "#ffffff" },
+    opacity: { 
+      value: 0.6, 
+      random: true,
+      anim: { enable: true, speed: 1.5, opacity_min: 0.2, sync: false }
     },
-    retina_detect: true
+    size: { 
+      value: 1.5, 
+      random: true,
+      anim: { enable: true, speed: 2, size_min: 0.5, sync: false }
+    },
+    move: { 
+      enable: true, 
+      speed: 0.3, 
+      direction: "none", 
+      random: true, 
+      straight: false 
+    }
+  },
+  retina_detect: true,
+  interactivity: { detect_on: "canvas", events: { onhover: { enable: false } } }
 });
-</script>
-<script>
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({canvas: document.getElementById('planets'), alpha:true});
-renderer.setSize(window.innerWidth, window.innerHeight);
+setInterval(() => {
+  const canvas = document.querySelector('#particles-stars canvas');
+  const ctx = canvas.getContext('2d');
+  const x = Math.random() * canvas.width;
+  const y = Math.random() * canvas.height / 2; 
+  let length = 100;
+  let speed = 8 + Math.random() * 4;
+  let angle = Math.random() * 0.2 - 0.1; 
 
-const geometry = new THREE.SphereGeometry(1, 32, 32);
-const material1 = new THREE.MeshStandardMaterial({color: 0xff5555});
-const material2 = new THREE.MeshStandardMaterial({color: 0x55ff55});
-const material3 = new THREE.MeshStandardMaterial({color: 0x5555ff});
-
-const planet1 = new THREE.Mesh(geometry, material1);
-const planet2 = new THREE.Mesh(geometry, material2);
-const planet3 = new THREE.Mesh(geometry, material3);
-
-planet1.position.set(5,2,-10);
-planet2.position.set(-6,-1,-15);
-planet3.position.set(3,4,-12);
-
-scene.add(planet1, planet2, planet3);
-
-const light = new THREE.PointLight(0xffffff, 1);
-light.position.set(0,0,0);
-scene.add(light);
-
-camera.position.z = 5;
-
-function animatePlanets(){
-    requestAnimationFrame(animatePlanets);
-    planet1.rotation.y += 0.01;
-    planet2.rotation.y += 0.008;
-    planet3.rotation.y += 0.012;
-    renderer.render(scene, camera);
-}
-animatePlanets();
+  function drawMeteor() {
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x - length * Math.cos(angle), y - length * Math.sin(angle));
+    ctx.stroke();
+  }
+  drawMeteor();
+}, 5000);
 </script>
 </body>
 </html>
