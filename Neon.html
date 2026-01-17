@@ -26,7 +26,9 @@ html, body {
     position: fixed;
     inset: 0;
     z-index: 0;
-    opacity: 0.3; 
+    opacity: 0.25;
+    filter: saturate(130%) contrast(120%);
+    pointer-events: none;
 }
 /* Main content */
 .main-content {
@@ -227,22 +229,22 @@ function resetIdle(){
 resetIdle();
 </script>
 <script>
-    VANTA.NET({
-        el: "#vanta-bg",
-        mouseControls: true,
-        touchControls: true,
-        gyroControls: true,
-        minHeight: 200.00,
-        minWidth: 200.00,
-        scale: 1.00,
-        scaleMobile: 1.00,
-        color: 0xb2f2bb,
-        backgroundColor: 0x0,
-        points: 8.00,
-        maxDistance: 15.00,
-        spacing: 20.00,
-        showDots: false
-    })
+VANTA.NET({
+    el: "#vanta-bg",
+    mouseControls: true,
+    touchControls: true,
+    gyroControls: false,
+    minHeight: 200.0,
+    minWidth: 200.0,
+    scale: 1.0,
+    scaleMobile: 1.0,
+    color: 0x90e0ef,
+    color2: 0xb2f2bb,
+    backgroundColor: 0x000000,
+    points: 12.0,
+    maxDistance: 22.0,
+    spacing: 18.0,
+    showDots: false
 });
 </script>
 </body>
