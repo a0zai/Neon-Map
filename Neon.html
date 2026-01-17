@@ -54,12 +54,6 @@ html, body {
     transition: 3s ease;
 }
 
-/* Idle state */
-body.idle .title {
-    opacity: 0.35;
-    letter-spacing: 18px;
-}
-
 /* Clock */
 .clock-container {
     position: relative;
@@ -77,28 +71,11 @@ body.idle .title {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: rgba(255,255,255,0.05);
-    box-shadow: inset 0 10px 50px rgba(255,255,255,0.08), 
-                0 0 30px rgba(255,255,255,0.05); 
-    backdrop-filter: blur(4px);  
-    pointer-events: none;  
-}
-.glass-cover::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: linear-gradient(120deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 60%);
-    transform: rotate(45deg);
-    animation: shine 5s linear infinite;
-    border-radius: 50%;
-}
-
-@keyframes shine {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    background: rgba(255,255,255,0.08); /* زيادة شفافية الأبيض لتلميع أكثر */
+    box-shadow: inset 0 20px 60px rgba(255,255,255,0.15), /* زيادة اللمعان الداخلي */
+                0 0 40px rgba(255,255,255,0.1);          /* لمعان خارجي خفيف */
+    backdrop-filter: blur(4px);                           /* زيادة الضبابية لإحساس العمق */
+    pointer-events: none;
 }
 /* Hidden core text */
 .clock-container::after {
@@ -220,7 +197,6 @@ body.idle .title {
 <div id="particles-js"></div>
 
 <div class="main-content">
-    <div class="title">A(See(n)see)Z</div>
     <div class="clock-container">
         <div class="glass-cover"></div>
         <div class="brand-name">Seensee</div>
