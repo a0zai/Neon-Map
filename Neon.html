@@ -187,6 +187,7 @@ html, body {
 <body>
 <div id="vanta-bg"></div> 
 <div id="particles-stars"></div>
+<div id="particles-movement"></div>
 <div class="main-content">
     <div class="clock-container">
         <div class="glass-cover"></div>
@@ -267,6 +268,24 @@ particlesJS("particles-stars", {
             anim: { enable: true, speed: 3, size_min: 0.5, sync: false }
         },
         move: { enable: true, speed: 0.3, direction: "none", random: true },
+        line_linked: { enable: false }
+    },
+    retina_detect: true
+});
+particlesJS("particles-movement", {
+    particles: {
+        number: { value: 27, density: { enable: true, value_area: 600 } },
+        color: { value: "#b19cd9" }, 
+        shape: { type: "circle" },
+        opacity: { value: 0.7, random: true },
+        size: { value: 2, random: true },
+        move: { 
+            enable: true,
+            speed: 1,           
+            direction: "none",  
+            random: true,
+            straight: false
+        },
         line_linked: { enable: false }
     },
     retina_detect: true
