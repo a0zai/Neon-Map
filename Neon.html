@@ -1,189 +1,129 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="application-name" content="A0Z">
-<meta name="author" content="system">
-<meta name="generator" content="custom-static">
-<meta name="classification" content="web-interface">
-<meta name="subject" content="real-time interaction">
-<title>A∞Z</title>
-<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-<style>
-html, body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    background: #000;
-    font-family: 'Courier New', monospace;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-}
+    <meta charset="UTF-8">
+    <title>Seensee - Zero Time</title>
+    <style>
+        body {
+            background: #0f172a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            color: white;
+        }
 
-#particles-js {
-    position: fixed;
-    top:0; left:0;
-    width:100%; height:100%;
-    z-index:0;
-    pointer-events:none;
-}
-#output { 
-    opacity:1;
-    transform: translateY(0);
-    white-space: pre-wrap;
-    z-index:10;
-    color: #eaeaea;
-    text-shadow: 0 0 8px rgba(255,255,255,0.7);
-}
-.line {
-    margin-bottom:0.7em;
-    opacity:0;
-    transform: translateY(20px);
-    transition: opacity 2s ease, transform 2s ease;
-}
-.line.visible {
-    opacity:1;
-    transform: translateY(0);
-}
+        .clock-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            border: 8px solid #334155;
+            border-radius: 50%;
+            background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+            box-shadow: 0 0 50px rgba(0,0,0,0.5), inset 0 0 20px rgba(0,0,0,0.5);
+        }
 
-.glitch {
-    font-weight:bold;
-    letter-spacing:1px;
-    color:#00ff00;
-    text-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00;
-    animation: glitchAnim 0.12s steps(2, jump-end) infinite;
-}
-@keyframes glitchAnim {
-    0% { transform:translate(1px,-1px); }
-    50% { transform:translate(-2px,2px); }
-    100% { transform:translate(1px,-1px); }
-}
+        .clock-container::after {
+            content: '18 | 81';
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #64748b;
+            font-size: 14px;
+            letter-spacing: 2px;
+        }
 
-.shake {
-    animation: shakeAnim 0.35s ease-in-out;
-}
-@keyframes shakeAnim {
-    0% { transform:translateX(0); }
-    20% { transform:translateX(-4px); }
-    40% { transform:translateX(4px); }
-    60% { transform:translateX(-3px); }
-    80% { transform:translateX(3px); }
-    100% { transform:translateX(0); }
-}
-
-/* Fade black at the end */
-#fade-black {
-    position: fixed;
-    top:0; left:0;
-    width:100%; height:100%;
-    background:#000;
-    pointer-events:none;
-    opacity:0;
-    z-index:999;
-    transition: opacity 3s ease;
-}
-</style>
+        .center-dot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 15px;
+            height: 15px;
+            background: #38bdf8;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+        .number {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 20px;
+            box-sizing: border-box;
+            color: #f1f5f9;
+        }
+        .n12 { transform: rotate(0deg); }
+        .n1  { transform: rotate(-30deg); } .n1 div { transform: rotate(30deg); }
+        .n2  { transform: rotate(-60deg); } .n2 div { transform: rotate(60deg); }
+        .n3  { transform: rotate(-90deg); } .n3 div { transform: rotate(90deg); }
+        .n4  { transform: rotate(-120deg); } .n4 div { transform: rotate(120deg); }
+        .n5  { transform: rotate(-150deg); } .n5 div { transform: rotate(150deg); }
+        .n6  { transform: rotate(-180deg); } .n6 div { transform: rotate(180deg); }
+        .n7  { transform: rotate(-210deg); } .n7 div { transform: rotate(210deg); }
+        .n8  { transform: rotate(-240deg); } .n8 div { transform: rotate(240deg); }
+        .n9  { transform: rotate(-270deg); } .n9 div { transform: rotate(270deg); }
+        .n10 { transform: rotate(-300deg); } .n10 div { transform: rotate(300deg); }
+        .n11 { transform: rotate(-330deg); } .n11 div { transform: rotate(330deg); }
+        .hand {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom;
+            border-radius: 10px;
+            z-index: 5;
+        }
+        .hour { width: 6px; height: 100px; background: #f1f5f9; }
+        .minute { width: 4px; height: 140px; background: #94a3b8; }
+        .second { width: 2px; height: 160px; background: #38bdf8; }
+        .title { margin-bottom: 20px; font-size: 32px; letter-spacing: 5px; color: #38bdf8;}
+    </style>
 </head>
 <body>
-<div id="particles-js"></div>
-<div id="output"></div>
-<div id="fade-black"></div>
+    <div class="title">SEENSEE ZERO TIME</div>
+    <div class="clock-container">
+        <div class="center-dot"></div>
+        <div class="number n12"><div>12</div></div>
+        <div class="number n1"><div>1</div></div>
+        <div class="number n2"><div>2</div></div>
+        <div class="number n3"><div>3</div></div>
+        <div class="number n4"><div>4</div></div>
+        <div class="number n5"><div>5</div></div>
+        <div class="number n6"><div>6</div></div>
+        <div class="number n7"><div>7</div></div>
+        <div class="number n8"><div>8</div></div>
+        <div class="number n9"><div>9</div></div>
+        <div class="number n10"><div>10</div></div>
+        <div class="number n11"><div>11</div></div>
+        <div class="hand hour" id="hour"></div>
+        <div class="hand minute" id="minute"></div>
+        <div class="hand second" id="second"></div>
+    </div>
 
-<script>
-/* ---- TYPEWRITER EFFECT ---- */
-function typeLine(text, callback) {
-    const container = document.getElementById("output");
-    const line = document.createElement("div");
-    line.className = "line";
-    container.appendChild(line);
+    <p style="margin-top: 30px; color: #64748b;">The original flow of nature - Counter Clockwise</p>
 
-    setTimeout(() => line.classList.add('visible'), 50);
-
-    let i = 0;
-    function type() {
-        if(i < text.length){
-            line.textContent += text[i];
-            i++;
-            const jitter = Math.random() * 80;
-            setTimeout(type, 180 + jitter);
-        } else {
-            if(callback) setTimeout(callback, 200);
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const seconds = now.getSeconds();
+            const minutes = now.getMinutes();
+            const hours = now.getHours();
+            const secondsDeg = -(seconds * 6); 
+            const minutesDeg = -(minutes * 6) - (seconds * 0.1);
+            const hoursDeg = -(hours * 30) - (minutes * 0.5);
+            document.getElementById('second').style.transform = `translateX(-50%) rotate(${secondsDeg}deg)`;
+            document.getElementById('minute').style.transform = `translateX(-50%) rotate(${minutesDeg}deg)`;
+            document.getElementById('hour').style.transform = `translateX(-50%) rotate(${hoursDeg}deg)`;
         }
-    }
-    type();
-}
 
-/* ---- RANDOM GLITCH ---- */
-function glitchFx() {
-    const out = document.getElementById("output");
-    const g = document.createElement("div");
-    g.className = "line glitch";
-    g.textContent = "!! SIGNAL DISTORTION DETECTED !!";
-    out.appendChild(g);
-    setTimeout(() => g.remove(), 500);
-}
-
-/* ---- MASTER SEQUENCE ---- */
-function runSequence(lines, index=0) {
-    if(index >= lines.length){
-        const fade = document.getElementById("fade-black");
-        fade.style.opacity = 1;
-
-        fade.addEventListener("transitionend", () => {
-            window.location.href = "index.html";
-        }, { once: true });
-
-        return;
-    }
-
-    typeLine(lines[index], () => {
-        if(Math.random() < 0.22) glitchFx();
-        if(lines[index].includes("FAILED") || lines[index].includes("Unknown")){
-            const last = document.querySelector(".line:last-child");
-            last.classList.add("shake");
-        }
-        runSequence(lines, index+1);
-    });
-}
-
-/* ---- START ---- */
-fetch("https://api.ipify.org?format=json")
-  .then(r => r.json())
-  .then(data => {
-      const lines = [
-      "You think you’re lost.",
-      "You’re just offline."
-      ];
-      runSequence(lines);
-  })
-  .catch(() => {
-      runSequence([
-          "[ A∞Z / FAILURE ]",
-          "Closing connection..."
-      ]);
-  });
-
-/* ---- PARTICLES ---- */
-particlesJS("particles-js", {
-    particles: {
-        number: { value:200, density:{ enable:true, value_area:1800 } },
-        color: { value:"#7f3cff" },
-        shape: { type:"circle" },
-        opacity: { value:0.7, random:true },
-        size: { value:1.5, random:true },
-        line_linked: { enable:false },
-        move: { enable:true, speed:0.5, random:true, straight:false, out_mode:"out" }
-    },
-    interactivity: {
-        detect_on:"canvas",
-        events:{ onhover:{ enable:false }, onclick:{ enable:false } }
-    },
-    retina_detect:true
-});
-</script>
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
 </body>
 </html>
