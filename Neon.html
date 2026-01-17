@@ -26,8 +26,9 @@ html, body {
     position: fixed;
     inset: 0;
     z-index: 0;
+    opacity: 0.3; 
+    filter: blur(1px); 
 }
-
 /* Main content */
 .main-content {
     position: relative;
@@ -227,21 +228,24 @@ function resetIdle(){
 resetIdle();
 </script>
 <script>
-VANTA.NET({
-  el: "#vanta-bg",
-  mouseControls: true,
-  touchControls: true,
-  gyroControls: true, 
-  minHeight: 200.00,
-  minWidth: 200.00,
-  scale: 1.00,
-  scaleMobile: 1.00,
-  color: 0xb2f2bb,   
-  backgroundColor: 0x0, 
-  points: 10.00,      
-  maxDistance: 20.00, 
-  spacing: 15.00    
-})
+window.addEventListener('DOMContentLoaded', () => {
+    VANTA.NET({
+        el: "#vanta-bg",
+        mouseControls: true,
+        touchControls: true,
+        gyroControls: true,
+        minHeight: 200.00,
+        minWidth: 200.00,
+        scale: 1.00,
+        scaleMobile: 1.00,
+        color: 0xb2f2bb,
+        backgroundColor: 0x0,
+        points: 8.00,
+        maxDistance: 15.00,
+        spacing: 20.00,
+        showDots: false
+    })
+});
 </script>
 </body>
 </html>
